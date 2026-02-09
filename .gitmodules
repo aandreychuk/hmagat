@@ -1,0 +1,3 @@
+[submodule "pyamg"]
+	path = pyamg
+	url = git@github.com:pyamg/pyamg.git

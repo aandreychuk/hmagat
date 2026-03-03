@@ -439,7 +439,7 @@ class kMeansHyperedgeGenerator(HyperedgeGenerator):
         for _ in range(self.num_updates):
             colours = self.update_colours(colours, obs)
 
-        clusterer = KMeans(n_clusters=2 * num_final_colours, max_iter=100).fit(
+        clusterer = KMeans(n_clusters=2 * num_final_colours, max_iter=100, random_state=self.seed).fit(
             colours[obs == 0]
         )
 

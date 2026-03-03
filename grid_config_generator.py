@@ -116,7 +116,7 @@ START_ID = 2
 def _get_components(obstacles, map_w, start_id=START_ID, moves=MOVES):
     grid = obstacles.copy()
 
-    components = bfs(grid, moves, map_w, start_id, free_cell=0)
+    components = bfs(grid, moves, start_id, 0)
     return grid, components
 
 

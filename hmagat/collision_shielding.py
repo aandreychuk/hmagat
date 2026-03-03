@@ -66,7 +66,7 @@ class NaiveCollisionShielding(BaseCollisionShielding):
             # Despite using softmax, sum might not be 1 due to fp errors
             probs = probs / np.sum(probs, keepdims=True, axis=-1)
 
-            actions = np.zeros(probs.shape[0], dtype=np.int)
+            actions = np.zeros(probs.shape[0], dtype=int)
             ids = np.arange(probs.shape[1])
             for i in range(probs.shape[0]):
                 actions[i] = self.rng.choice(
@@ -227,14 +227,14 @@ class PIBTInstance(PIBT):
         return Q_to
 
     def step_no_update(self, transition_probabilities, pibt_ids=None):
-        self.actions = np.zeros(self.N, dtype=np.int)
+        self.actions = np.zeros(self.N, dtype=int)
         if self.reached_goals:
             return self.actions
         _ = self._step(self.state, self.priorities, transition_probabilities, pibt_ids)
         return self.actions
 
     def step(self, transition_probabilities, pibt_ids=None):
-        self.actions = np.zeros(self.N, dtype=np.int)
+        self.actions = np.zeros(self.N, dtype=int)
         if self.reached_goals:
             return self.actions
         self.state = self._step(

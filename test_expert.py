@@ -2,7 +2,6 @@ import argparse
 import pickle
 import pathlib
 import numpy as np
-import wandb
 import signal
 from contextlib import contextmanager
 
@@ -156,10 +155,6 @@ def main():
 
     parser.add_argument("--set_expert_time_limit", type=int, default=None)
 
-    parser.add_argument("--wandb_project", type=str, default="hyper-mapf-test")
-    parser.add_argument("--wandb_entity", type=str, default=None)
-    parser.add_argument("--wandb_tag", type=str, default=None)
-
     args = parser.parse_args()
     print(args)
 
@@ -179,17 +174,6 @@ def main():
         grid_configs.append(_grid_config_generator(seed))
 
     expert_algorithm, inference_config = get_expert_algorithm_and_config(args)
-
-    run_name = f"{args.test_name}_{args.expert_algorithm}"
-    use_wandb = args.wandb_entity is not None
-    if use_wandb:
-        wandb.init(
-            project=args.wandb_project,
-            name=run_name,
-            config=vars(args) | {"expert": True},
-            entity=args.wandb_entity,
-            tags=[args.wandb_tag] if args.wandb_tag is not None else None,
-        )
 
     num_success = 0
     all_success, all_makespan = [], []
@@ -235,22 +219,6 @@ def main():
         success_rate = num_success / (i + 1)
 
         print(f"-- Success Rate: {success_rate}")
-        if use_wandb:
-            wandb.log(
-                {
-                    "success_rate": success_rate,
-                    "average_makespan": np.mean(all_makespan),
-                    "average_sum_of_costs": np.mean(all_sum_of_costs),
-                    "average_sum_of_loses": np.mean(all_sum_of_losses),
-                    "average_partial_success_rate": np.mean(all_partial_success_rates),
-                    "seed": grid_config.seed,
-                    "success": success,
-                    "makespan": makespan,
-                    "sum_of_costs": sum_of_costs,
-                    "sum_of_losses": sum_of_losses,
-                    "partial_success_rate": partial_success_rate,
-                }
-            )
     print("Final results:")
     print(f"Success Rate: {success_rate}")
     print(f"Average Makespan: {np.mean(all_makespan)}")

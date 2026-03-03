@@ -1,7 +1,6 @@
 import argparse
 import pathlib
 import numpy as np
-import wandb
 from collections import OrderedDict
 
 from pogema import pogema_v0
@@ -282,8 +281,6 @@ def main():
     parser = add_temperature_sampling_args(parser)
 
     parser.add_argument("--model_epoch_num", type=int, default=None)
-    parser.add_argument("--wandb_project", type=str, default="hyper-mapf-temp-samp")
-    parser.add_argument("--wandb_entity", type=str, default=None)
 
     args = parser.parse_args()
     print(args)
@@ -364,20 +361,8 @@ def main():
             "org_validation_partial_success_rate": np.mean(all_partial_success_rate),
             "org_validation_sum_of_costs": np.mean(all_sum_of_costs),
         }
-    use_wandb = args.wandb_entity is not None
-    assert use_wandb, "Using wandb to log information"
-
     if args.temperature_run_for_baseline_only:
-        run_name = f"{args.run_name}_{args.temperature_run_name}"
-
-        wandb.init(
-            project=args.wandb_project,
-            name=run_name,
-            config=vars(args),
-            entity=args.wandb_entity,
-        )
-        for _ in range(args.num_epochs):
-            wandb.log(org_results)
+        print("Baseline results:", org_results)
         return
 
     actor, critic = get_actor_critic(model, args, device)
@@ -396,15 +381,6 @@ def main():
 
     checkpoint_path = pathlib.Path(args.temperature_checkpoints_dir, "last.pt")
     checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-
-    run_name = f"{args.run_name}_{args.temperature_run_name}"
-    if use_wandb:
-        wandb.init(
-            project=args.wandb_project,
-            name=run_name,
-            config=vars(args),
-            entity=args.wandb_entity,
-        )
 
     use_target_vec = args.use_target_vec
     if use_target_vec is None:
@@ -556,8 +532,6 @@ def main():
             )
             torch.save(actor.state_dict(), checkpoint_path)
 
-        if use_wandb:
-            wandb.log(results | org_results)
     checkpoint_path = pathlib.Path(args.temperature_checkpoints_dir, "last.pt")
     torch.save(actor.state_dict(), checkpoint_path)
 

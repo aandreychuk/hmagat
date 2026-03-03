@@ -6,14 +6,13 @@ import ray
 import setproctitle
 from torch.utils.tensorboard import SummaryWriter
 import torch
-import wandb
 
 from alg_parameters import *
 from episodic_buffer import EpisodicBuffer
 from mapf_gym import MAPFEnv
 from model import Model
 from runner import Runner
-from util import set_global_seeds, write_to_tensorboard, write_to_wandb, make_gif, reset_env, one_step, update_perf
+from util import set_global_seeds, write_to_tensorboard, make_gif, reset_env, one_step, update_perf
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 ray.init(num_gpus=SetupParameters.NUM_GPU)
@@ -27,21 +26,6 @@ def main():
         restore_path = './local_model'
         net_path_checkpoint = restore_path + "/net_checkpoint.pkl"
         net_dict = torch.load(net_path_checkpoint)
-
-    if RecordingParameters.WANDB:
-        if RecordingParameters.RETRAIN:
-            wandb_id = None
-        else:
-            wandb_id = wandb.util.generate_id()
-        wandb.init(project=RecordingParameters.EXPERIMENT_PROJECT,
-                   name=RecordingParameters.EXPERIMENT_NAME,
-                   entity=RecordingParameters.ENTITY,
-                   notes=RecordingParameters.EXPERIMENT_NOTE,
-                   config=all_args,
-                   id=wandb_id,
-                   resume='allow')
-        print('id is:{}'.format(wandb_id))
-        print('Launching wandb...\n')
 
     if RecordingParameters.TENSORBOARD:
         if RecordingParameters.RETRAIN:
@@ -146,8 +130,6 @@ def main():
                 mb_imitation_loss = np.nanmean(mb_imitation_loss, axis=0)
 
                 # record training result
-                if RecordingParameters.WANDB:
-                    write_to_wandb(curr_steps, imitation_loss=mb_imitation_loss, evaluate=False)
                 if RecordingParameters.TENSORBOARD:
                     write_to_tensorboard(global_summary, curr_steps, imitation_loss=mb_imitation_loss, evaluate=False)
             else:
@@ -214,8 +196,6 @@ def main():
                         mb_loss.append(global_model.train(*slices))
 
                 # record training result
-                if RecordingParameters.WANDB:
-                    write_to_wandb(curr_steps, performance_dict, mb_loss, evaluate=False)
                 if RecordingParameters.TENSORBOARD:
                     write_to_tensorboard(global_summary, curr_steps, performance_dict, mb_loss, evaluate=False)
 
@@ -235,9 +215,6 @@ def main():
                     eval_performance_dict = evaluate(eval_env, eval_memory, global_model, global_device, save_gif,
                                                      curr_steps, False)
                 # record evaluation result
-                if RecordingParameters.WANDB:
-                    # write_to_wandb(curr_steps, greedy_eval_performance_dict, evaluate=True, greedy=True)
-                    write_to_wandb(curr_steps, eval_performance_dict, evaluate=True, greedy=False)
                 if RecordingParameters.TENSORBOARD:
                     # write_to_tensorboard(global_summary, curr_steps, greedy_eval_performance_dict, evaluate=True,
                     #                      greedy=True)
@@ -297,8 +274,6 @@ def main():
         # killing
         for e in envs:
             ray.kill(e)
-        if RecordingParameters.WANDB:
-            wandb.finish()
 
 
 def evaluate(eval_env, episodic_buffer, model, device, save_gif, curr_steps, greedy):

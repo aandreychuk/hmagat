@@ -2,7 +2,6 @@ import argparse
 import pickle
 import pathlib
 import numpy as np
-import wandb
 import time
 import random
 import math
@@ -264,10 +263,6 @@ def main():
     parser = add_hypergraph_generation_args(parser)
     parser = add_additional_data_args(parser)
     parser = add_training_args(parser)
-
-    parser.add_argument("--wandb_project", type=str, default="hyper-mapf-train")
-    parser.add_argument("--wandb_entity", type=str, default=None)
-
     parser.add_argument("--num_old_samps_coef", type=float, default=3.0)
     parser.add_argument("--oe_every_num_epochs", type=int, default=None)
 
@@ -337,17 +332,6 @@ def main():
 
     expert_makespans = None
     expert_makespans = check_or_create_expert_makespans(args)
-
-    loss_function = get_loss_function(args)
-
-    use_wandb = args.wandb_entity is not None
-    if use_wandb:
-        wandb.init(
-            project=args.wandb_project,
-            name=args.run_name,
-            config=vars(args),
-            entity=args.wandb_entity,
-        )
 
     # Data split
     train_id_max = int(
@@ -928,8 +912,6 @@ def main():
             print("Finished Validation")
             print("------------------")
 
-        if use_wandb:
-            wandb.log(results)
     checkpoint_path = pathlib.Path(f"{args.checkpoints_dir}", f"last.pt")
     torch.save(model.state_dict(), checkpoint_path)
 

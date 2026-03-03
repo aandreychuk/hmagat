@@ -2,7 +2,6 @@ import argparse
 import pickle
 import pathlib
 import numpy as np
-import wandb
 from collections import OrderedDict
 import time
 
@@ -140,9 +139,6 @@ def main():
     parser.add_argument("--subsample_n", type=int, default=None)
 
     parser.add_argument("--svg_save_dir", type=str, default=None)
-    parser.add_argument("--wandb_project", type=str, default="hyper-mapf-test")
-    parser.add_argument("--wandb_entity", type=str, default=None)
-    parser.add_argument("--wandb_tag", type=str, default=None)
 
     parser.add_argument("--record_timings", action="store_true", default=False)
 
@@ -203,15 +199,6 @@ def main():
     if args.rl_based_temperature_sampling:
         run_name += (
             f"_{args.temperature_run_name}_e{args.temperature_sampling_model_epoch_num}"
-        )
-    use_wandb = args.wandb_entity is not None
-    if use_wandb:
-        wandb.init(
-            project=args.wandb_project,
-            name=run_name,
-            config=vars(args) | {"num_params": num_parameters},
-            entity=args.wandb_entity,
-            tags=[args.wandb_tag] if args.wandb_tag is not None else None,
         )
 
     if args.record_timings:
@@ -313,9 +300,6 @@ def main():
             timings = np.mean(model.timings)
             model.timings = []
             results = results | {"mean_timings": timings}
-
-        if use_wandb:
-            wandb.log(results)
 
         if args.svg_save_dir is not None:
             file_path = pathlib.Path(f"{args.svg_save_dir}", f"anim_{i}.svg")

@@ -2,7 +2,6 @@ import argparse
 import pickle
 import pathlib
 import numpy as np
-import wandb
 import time
 import random
 
@@ -143,9 +142,6 @@ def main():
     parser = add_additional_data_args(parser)
     parser = add_training_args(parser)
 
-    parser.add_argument("--wandb_project", type=str, default="hyper-mapf-train")
-    parser.add_argument("--wandb_entity", type=str, default=None)
-
     args = parser.parse_args()
     print(args)
 
@@ -217,17 +213,6 @@ def main():
     expert_makespans = None
     if args.oe_improve_quality:
         expert_makespans = check_or_create_expert_makespans(args)
-
-    loss_function = get_loss_function(args)
-
-    use_wandb = args.wandb_entity is not None
-    if use_wandb:
-        wandb.init(
-            project=args.wandb_project,
-            name=args.run_name,
-            config=vars(args),
-            entity=args.wandb_entity,
-        )
 
     unique_map_ids = np.sort(np.unique(dense_dataset[4]))
     num_samples = len(unique_map_ids)
@@ -850,8 +835,6 @@ def main():
                 print("Finished Online Expert")
                 print("----------------------")
 
-        if use_wandb:
-            wandb.log(results)
     checkpoint_path = pathlib.Path(f"{args.checkpoints_dir}", f"last.pt")
     torch.save(model.state_dict(), checkpoint_path)
 
